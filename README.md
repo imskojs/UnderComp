@@ -1,5 +1,5 @@
-![alt text](https://github.com/imskojs/UnderComp/ins1.png "Instruction 1") 
-![alt text](https://github.com/imskojs/UnderComp/ins2.png "Instruction 2") 
+![alt text](./ins1.png "Instruction 1") 
+![alt text](./ins2.png "Instruction 2") 
  ```js
  var X = {
      apple: 0,
