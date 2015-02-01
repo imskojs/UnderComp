@@ -35,6 +35,13 @@
  console.log(window._wrapped);
  console.log(y._wrapped);
  
- new wrapper(55); //이렇게 하면 어디에 _wrapped가 생기는거지?
+ new wrapper(55); //이렇게 하면 어디에 _wrapped가 생기는거지? 
   ```
+  `new wrapper(55)`는 `[1, 2, 3, 4]`을 처주는것과 같다. `var`에다가 assign을 안하면 `window`에 `return`하고 바로 없어진다. (`temp`). 
+  ```
+  [1, 2, 3, 4].pop().push(4).slice();
+  new wrapper(55).pop().push(4).slice();
+  ```
+  이런느낌?
+  
   이 wrapper때문에 `_`는 object가 아닌 function 이다. `typeof _ === 'function'`
