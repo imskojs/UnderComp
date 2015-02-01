@@ -99,45 +99,49 @@ addAfter(1,2,3,4);
 
 
 
+`_(obj).chain()` returns the `_(obj)` which is really a `new wrapper(obj)`
+which is just a object itself with possibility of having custom prototype.methods through
+`wrapper.prototype`. i.e. it is itself assigned to `_(obj)._wrapped` i.e. `_(obj)._wrapped = obj`
+chain and `_(obj).chain()` are totally different things. One is `Boolean` another is a `function`.
+argument chain refers to `Boolean` chain
+function passed in as argument cannot be called like a method eg) `_(obj).chain()` is not a function
+passed in as an argument where as `chain()` is.
 
-
-
-
-
-#TODO FORMAT
-
-// _(obj).chain() returns the _(obj) which is really a new wrapper(obj)
-// which is just a object itself with possibility of having custom prototype.methods through
-// wrapper.prototype. i.e. it is itself assigned to _(obj)._wrapped i.e. _(obj)._wrapped = obj
-// chain and _(obj).chain() are totally different things. One is Boolean another is a function.
-// argument chain refers to Boolean chain
-// function passed in as argument cannot be called like a method eg) _(obj).chain() is not a function
-// passed in as an argument where as chain() is.
+```js
 var result = function(obj, chain) {
   return chain ? _(obj).chain() : obj;
 };
+```
 
-// chain is a [wrapper object]'s prototype method. It just sets the _(obj)._chain to true
-// which will be used as a flag for future chaining methods. Later on when we want to chain
-// methods we will need to first call _(obj).chain() which will set _chain to true which in
-// turn are used by custom methods added with addToWrapper method.
+chain is a `[wrapper object]`s prototype method. It just sets the `_(obj)._chain` to `true`
+which will be used as a flag for future chaining methods. Later on when we want to chain
+methods we will need to first call `_(obj).chain()` which will set `_chain` to `true` which in
+turn are used by custom methods added with `addToWrapper` method.
+
+```js 
 wrapper.prototype.chain = function() {
   this._chain = true;
   return this;
 };
+ ```
 
-// wrapper should have been named Wrapper to make it explicit that it is a constructor.
-// `this` is used in the same way as any other constructors. (i.e. for the purpose of new function)
+`wrapper` should have been named `Wrapper` to make it explicit that it is a constructor.
+`this` is used in the same way as any other constructors. (i.e. for the purpose of `new` function)
+```js
 var wrapper = function(obj) { this._wrapped = obj; }; 
+```
 
-// _(obj) retruns a function with this._wrapped = obj.  (_wrapped = obj)
-// So far we have _(obj)._chain property and _(obj)._wrapped property.
+`_(obj)` retruns a function with `this._wrapped = obj`.  that is `_wrapped = obj`
+So far we have `_(obj)._chain` property and `_(obj)._wrapped` property.
+```js
 var _ = function(obj) { return new wrapper(obj); };
+```
 
-// addToWrapper only adds to the wrapper.prototype chain. It does not add to `_` itself.
-// addToWrapper serves 2 purposes. One is to make a custom method available to all methods
-// that was constructed (well I guess it's not a total constructor we don't save _(obj) often) with 
-// new wrapper(obj) i.e. _(obj). Another is to make such custom methods to be chainable.
+`addToWrapper` only adds to the `wrapper.prototype` chain. It does not add to `_` itself.
+addToWrapper serves 2 purposes. One is to make a custom method available to all methods
+that was constructed (well I guess it's not a total constructor we don't save _(obj) often) with 
+`new wrapper(obj)` i.e. `_(obj)`. Another is to make such custom methods to be chainable.
+```js
 var addToWrapper = function(name, func) {
   //add to wrapper function which will be used as a constructor.
   // and if it is added at wrapper.prototype all existing _(obj) will have access to new custom methods.
@@ -160,7 +164,9 @@ var addToWrapper = function(name, func) {
 
   };
 };
+```
 
+```js
   // Simple use of addToWrapper but this time makes the methods available to both `_` method and _(obj).method (i.e. new wrapper prototype method)
   // _[name] = obj[name] makes the method available to `_`
 _.mixin = function(obj) {
@@ -168,9 +174,10 @@ _.mixin = function(obj) {
     addToWrapper(name, _[name] = obj[name]);
   });
 }
+```
 
 
-Usage
+```js
 // unshift.call(args, this._wrapped) part makes value to refer to returned _(obj)'s obj which is 5 as obj.chain().first() returns _(obj) as _(5)
 // args = [5, 5]
 // Note to make OOP methods chainable we really do need to use addToWrapper to add to wrapper. or if we do it manually we would need to do
@@ -180,3 +187,25 @@ _([5,2,3]).addToWrapper("rangeIndex", function(obj, x){ return (this.indexOf( th
 obj.chain()
   .first()
   .rangeIndex(4)
+```
+
+
+TODO: 
+
+```js
+  each(['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'], function(name) {
+    var method = ArrayProto[name];
+    wrapper.prototype[name] = function() {
+      method.apply(this._wrapped, arguments);
+      return result(this._wrapped, this._chain);
+    };
+  });
+
+  // Add all accessor Array functions to the wrapper.
+  each(['concat', 'join', 'slice'], function(name) {
+    var method = ArrayProto[name];
+    wrapper.prototype[name] = function() {
+      return result(method.apply(this._wrapped, arguments), this._chain);
+    };
+  });
+```
