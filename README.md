@@ -1,5 +1,11 @@
 ![alt text](https://github.com/imskojs/UnderComp/blob/master/ins1.PNG "Instruction 1") 
+
+`commit`에 노트저장함
+
 ![alt text](https://github.com/imskojs/UnderComp/blob/master/ins2.PNG "Instruction 2") 
+
+
+
  ```js
  var X = {
      apple: 0,
