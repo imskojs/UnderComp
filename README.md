@@ -98,13 +98,12 @@ addAfter(1,2,3,4);
 ```
 
 
-
 `_(obj).chain()` returns the `_(obj)` which is really a `new wrapper(obj)`
-which is just a object itself with possibility of having custom prototype.methods through
-`wrapper.prototype`. i.e. it is itself assigned to `_(obj)._wrapped` i.e. `_(obj)._wrapped = obj`
-chain and `_(obj).chain()` are totally different things. One is `Boolean` another is a `function`.
-argument chain refers to `Boolean` chain
-function passed in as argument cannot be called like a method eg) `_(obj).chain()` is not a function
+which is just an object itself with possibility of having custom prototype.methods through
+`wrapper.prototype`. i.e. it is itself assigned to `_(obj)._wrapped` i.e. `_(obj)._wrapped = obj`.
+`chain` and `_(obj).chain()` are totally different things. One is `Boolean` another is a `function`.
+argument chain refers to `Boolean` chain.
+function passed in as an argument cannot be called like a method eg) `_(obj).chain()` is not a function
 passed in as an argument where as `chain()` is.
 
 ```js
@@ -143,38 +142,54 @@ that was constructed (well I guess it's not a total constructor we don't save _(
 `new wrapper(obj)` i.e. `_(obj)`. Another is to make such custom methods to be chainable.
 ```js
 var addToWrapper = function(name, func) {
-  //add to wrapper function which will be used as a constructor.
-  // and if it is added at wrapper.prototype all existing _(obj) will have access to new custom methods.
   wrapper.prototype[name] = function() {
-
-    //To be called arguments. Often we will call without arguments eg) _(obj).first()
-    //But of course we can call _(obj).push(5) in which case args will be [5]
     var args = _.toArray(arguments);
-    // Add value of the calling object as first element of arguments array.
-    // This is done mainly so that values that are fed to a function are actually a wrapped object [1,2,3] part of _([1,2,3])
     unshift.call(args, this._wrapped);
-    // call the function we want to add with array of args which contains content of calling object again [1,2,3] part
-    // of _([1,2,3])
-    // If the func has this then it becomes `_` so say this.each() it will become _.each
-    // func.aplly(_, args) uses `_` so that `_` function could be used inside a `func` making func with `this` very powerful
-    // this._chain which is _(obj)._chain is a boolean which would have been set to true if _(obj).chain() is called before
-    // chaining other methods. if this._chain is true `result` function calls _(obj).chain() again which returns _(obj)
-    // with returned _(obj)._chain = true making it chainable infinitely this way.
     return result(func.apply(_, args), this._chain);
 
   };
 };
 ```
+`wrapper.prototype[name] = function() {`  
+
+wrapper 콘스트럭터의 프로토타입에 함수 저장한다. 프로토타입에 저장하면 이미 존재하는 `_(obj)`들도 나중에
+저장된 함수들을 사용할수 있다.
+
+`var args = _.toArray(arguments);`
+
+보통 arguments 없이 사용할때가 많다 eg) `_(obj).first()`
+arguments를 주었을 시의 `arg` 값 eg) `_(obj).push(5)`에서 `arg`는 [5]
+
+`unshift.call(args, this._wrapped);`
+
+this._wrapped는 _(obj)._wrapped이다. 즉 `args`의 첫번째 값은 `_(obj)`에서 `obj`인것이다.
+
+`return result(func.apply(_, args), this._chain);`
+
+모든 `wrapper` 프로토탕비 메서드들은 감싸는 function들이다. 예);
+```js
+wrapper.toHanGeul = function () {
+ return (function toHanGuel(){})();
+}
+```
+
+`_` 에다가 apply로 context바인딩 한이유는 만약 함수가 `this`사용시 언더스코 method들을 사용하기 위한것이다.
+
+ `this._chain` which is `_(obj)._chain` is a boolean which would have been set to `true` if `_(obj).chain()` was called before.
+Note that if `this._chain` is `true`,  `result` function calls `_(obj).chain()` again which returns `_(obj)`  
+
+with return of result(obj, boolean), it makes a OOP style method chainable. Hence it is essential to return `result(obj, boolean)`
+also this part is what returns calle object i.e. `return this`
 
 ```js
-  // Simple use of addToWrapper but this time makes the methods available to both `_` method and _(obj).method (i.e. new wrapper prototype method)
-  // _[name] = obj[name] makes the method available to `_`
 _.mixin = function(obj) {
   each(_.functions(obj), function(name){
     addToWrapper(name, _[name] = obj[name]);
   });
 }
 ```
+Simple use of addToWrapper but this time makes the methods available to both `_` method and `_(obj).method` (i.e. `new wrapper` prototype method)
+`_[name] = obj[name]` makes the method available to `_`
 
 
 ```js
